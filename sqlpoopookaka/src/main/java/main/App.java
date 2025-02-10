@@ -9,8 +9,8 @@ import java.util.Scanner;
 
 public class App {
     public static void main(String[] args) throws ClassNotFoundException {
+        
         Scanner scanner = new Scanner(System.in);
-        DatabaseUtil.connection();
 
         while (true) {
 
@@ -28,13 +28,12 @@ public class App {
 
                 case 0:
                     scanner.close();
+                    DatabaseUtil.closeConnection();
                     System.exit(0);
                 default:
                     System.out.println("Invalid choice");
                     break;
             }
         }
-
-        /* CLOSE THE CONNECTION FOR NEXT COMMIT */
     }
 }
