@@ -21,7 +21,7 @@ public class ConnectionPool {
 
   private ConnectionPool(String url, String username, String password, int poolSize) {
     this.poolSize = poolSize;
-    this.state = States.INITIALIZING;
+    this.state = States.initializing;
     for (int i = 0; i < this.poolSize; i++) {
       try {
         connPool.add(createConnection(url, username, password));
@@ -30,7 +30,7 @@ public class ConnectionPool {
         this.shutDown();
       }
     }
-    this.state = States.RUNNING;
+    this.state = States.running;
   }
 
   /*
@@ -62,7 +62,7 @@ public class ConnectionPool {
     */
 
   public synchronized Connection getConnection() {
-    if (this.state == States.SHUTTING_DOWN || this.state == States.SHUTDOWN) {
+    if (this.state == States.shuttingDown || this.state == States.shutDown) {
         return null;
     }
 
@@ -79,26 +79,50 @@ public class ConnectionPool {
     notify();
   }
 
-  public void shutDown() {
-    if (this.state == States.INITIALIZING) {
-      
+  /* shuts down the instance:
+   * closes connection if errors happen in pool initialization
+   * or for a natural shutdown
+   * 
+   * for natural shutdonw, should wait until all connections
+   * are returned
+   */
+  public synchronized void shutDown() {
+    if (this.state == States.initializing) {
+      for (Connection conn : connPool) {
+        try {
+          conn.close();
+          System.out.println("Connection closed");
+        } catch (Exception e) {
+          System.out.println("closing failed");
+        }
+      }
     }
 
-    if (this.state == States.RUNNING) {
-      this.state = States.SHUTTING_DOWN;
+    if (this.state == States.running) {
+      this.state = States.shuttingDown;
 
-      if (connPool.size() == poolSize) {
-        for (Connection connection : connPool) {
-          try {
-            connection.close();
-            System.out.println("closed a connection.");
-          } catch (SQLException e) {
-            System.out.println("connection failed");
-          }
+      while (connPool.size() != poolSize) {
+        try {
+          System.out.println("Waiting for processes to finish.");
+          wait();
+        } catch (Exception e) {
+          Thread.currentThread().interrupt();
+          System.out.println("interrupted");
+          break;
         }
-        connPool.clear();
-        this.state = States.SHUTDOWN;
       }
+         
+      for (Connection connection : connPool) {
+        try {
+          connection.close();
+          System.out.println("closed a connection.");
+        } catch (SQLException e) {
+          System.out.println("connection failed");
+        }
+      }
+      connPool.clear();
+      this.state = States.shutDown;
+      System.out.println("Connection pool shut down");
     }
   }
 }
