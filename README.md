@@ -1,12 +1,5 @@
 # About # 
-This is a personal learning project. I make a manual Connection
-pool class that handles an int poolSize amount of concurrent
-premade connections to database. This is a learning project so some
-of it is inspired by various stackoverflow pages and sites like
-factorizing-guru for the singleton pool feature.
-
-ChatGPT has provided ideas for some good-to-have functionality
-for a connection pool.
+Singleton connection pool manager for JDCB and PostgreSQL database. Improves efficiency of database operations by reusing established connections in an array.
 
 # How it Works #
 + Manages an Arraylist of predefined connections to a database
